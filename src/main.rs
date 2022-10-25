@@ -5,44 +5,19 @@ pub mod schema;
 pub mod models;
 
 
-use dotenv::dotenv;
-use std::env;
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 
-use diesel::pg::PgConnection;
-use diesel::prelude::*;
+#[get("/")]
+async fn hello_world() ->  impl Responder {
+    HttpResponse::Ok().body("hello from rust")
 
-use crate::schema::post;
+}
 
+#[actix_web::main]
+async fn main() -> std::io::Result<()>{
 
-fn main(){
-    dotenv().ok();
-
-    let db_url=env::var("DATABASE_URL").expect("DB urlNotFound");
-
-    let conn=PgConnection::establish(&db_url).expect("cannot connecto to the DB");
-    println!("{}",db_url);
-
-
-
-    use self::schema::post::dsl::*;
-    use self::schema::post;
-    use self::models::{Post,NewPost};
-
-
-    let np =NewPost{
-        title:"mi tercer post",
-        body:"lorem iptsu",
-        slug:"primero post",
-    };
-
-    //insert
-
-    let postne:Post=diesel::insert_into(post::table).values(&np).get_result(&conn).expect("Insert error");
-
-    let posts_res =post.load::<Post>(&conn).expect("Query error");
-
-    for pst in posts_res{
-        println!("{}",pst.title);
-    }
-
+   return HttpServer::new(||{
+        App::new().service(hello_world)
+    }).bind(("0.0.0.0",9900)).unwrap().run().await;
+ 
 }
